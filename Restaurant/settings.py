@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest',
     'django_filters',
-    'drf_yasg',
+    # 'drf_yasg',
 ]
 AUTH_USER_MODEL = 'rest.User'
 REST_FRAMEWORK = {
