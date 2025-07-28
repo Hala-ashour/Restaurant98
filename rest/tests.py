@@ -67,3 +67,36 @@ class CategoryAPITestCase(APITestCase):
       response = self.client.get(self.list_url)
       self.assertEqual(len(response.data['results']), 5)
 
+
+
+
+from rest_framework.test import APITestCase
+from django.contrib.auth.models import User
+from .models import Customer
+
+class CustomerTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='admin', password='pass', is_staff=True)
+        self.client.login(username='admin', password='pass')
+
+    def test_create_customer(self):
+        data = {
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "john@example.com",
+            "phone": "123456789",
+            "address": "123 street"
+        }
+        response = self.client.post("/customers/", data)
+        self.assertEqual(response.status_code, 201)
+
+    def test_update_customer(self):
+        customer = Customer.objects.create(
+            first_name="Jane", last_name="Doe", email="jane@example.com",
+            phone="999", address="Somewhere"
+        )
+        response = self.client.put(f"/customers/{customer.id}/", {
+            "first_name": "JaneUpdated", "last_name": "Doe", "email": "jane@example.com",
+            "phone": "999", "address": "Updated Address"
+        })
+        self.assertEqual(response.status_code, 200)
