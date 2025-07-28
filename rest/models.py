@@ -16,3 +16,43 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+
+
+
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('canceled', 'Canceled'),
+    ]
+
+    customer = models.CharField(max_length=255) 
+    order_date = models.DateTimeField(auto_now_add=True)
+    total_amount = models.DecimalField(max_digits=7, decimal_places=2, default=0)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES)
+    notes = models.TextField(blank=True, null=True)
+    # products = models.ManyToManyField('Product', related_name='orders')
+    # customer = models.ForeignKey('customer')
+
+
+
+    def __str__(self):
+        return self.customer
+    
+
+
+
+# class OrderItem(models.Model):
+#     order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='order_items')
+#     product = models.ForeignKey('Product', on_delete=models.CASCADE)
+#     quantity = models.PositiveIntegerField(default=1)
+
+#     def __str__(self):
+#         return self.order
+    
+
+
+#     # لحساب total amount
+#     def get_total_price(self):
+#         return self.product.price * self.quantity     
