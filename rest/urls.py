@@ -17,3 +17,15 @@ router.register('Orders/', orderviewset)
 
 
 urlpatterns = router.urls
+
+
+
+
+from .views import CustomerViewSet
+
+router = DefaultRouter()
+router.register(r'customers', CustomerViewSet, basename='customer')
+
+urlpatterns = [
+    path('', include(router.urls)),
+]

@@ -40,3 +40,28 @@ class orderviewset(viewsets.ModelViewSet):
     pagination_class = OrderPagination
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['status', 'customer']
+
+
+
+
+
+    from rest_framework import viewsets
+from .models import Customer
+from .serializers import CustomerSerializer
+from .permissions import IsAdminOrReadOnly
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
+
+class CustomerViewSet(viewsets.ModelViewSet):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
+
+
+
+    @action(detail=True, methods=['get'])
+    def orders(self, request, pk=None):
+        customer = self.get_object()
+        orders = customer.order_set.all()  
+        data = OrderSerializer(orders, many=True).data
+        return Response(data)
