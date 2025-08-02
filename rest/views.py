@@ -2,7 +2,10 @@ from django.shortcuts import render
 from .serializers import CategorySerializer,OrderSerializer, ProductSerializer
 from .models import Category,Order, Product
 from rest_framework import viewsets,status
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
+from .permissions import IsAdminOrReadOnly
+
+
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -21,6 +24,7 @@ class ProductFilter(filters.FilterSet):
         fields = ['category', 'is_available']
 
 
+
 class IsAdminOrManager(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:  
@@ -36,6 +40,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAdminOrManager()]
+
         return [IsAuthenticated()]  
 
 
@@ -45,7 +50,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class OrderPagination(PageNumberPagination):
     page_size = 5
 
-class orderviewset(viewsets.ModelViewSet):
+class OrderViewset(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
@@ -69,6 +74,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
 
 
+
     @action(detail=True, methods=['get'])
     def orders(self, request, pk=None):
         customer = self.get_object()
@@ -87,7 +93,8 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAdminOrManager()]
+           return [IsAdminOrManager()]
+
         return [IsAuthenticated()]  
     
     @action(detail=True, methods=['GET'], url_path='check-availability')
