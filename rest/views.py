@@ -8,7 +8,17 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import PageNumberPagination
+from django_filters import rest_framework as filters
 
+class ProductFilter(filters.FilterSet):
+    price_lt = filters.NumberFilter(field_name='price', lookup_expr='lt')
+    price_gt = filters.NumberFilter(field_name='price', lookup_expr='gt')
+    price_lte = filters.NumberFilter(field_name='price', lookup_expr='lte')
+    price_gte = filters.NumberFilter(field_name='price', lookup_expr='gte')
+
+    class Meta:
+        model = Product
+        fields = ['category', 'is_available']
 
 
 class IsAdminOrManager(BasePermission):
@@ -18,6 +28,7 @@ class IsAdminOrManager(BasePermission):
         return request.user.is_authenticated and (
             request.user.is_staff or getattr(request.user, 'role', '') == 'manager'
         )
+    
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -48,13 +59,13 @@ class orderviewset(viewsets.ModelViewSet):
 from rest_framework import viewsets
 from .models import Customer
 from .serializers import CustomerSerializer
-from rest_framework.permissions import IsAuthenticated,IsAdminOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
+    permission_classes = [IsAuthenticated]
 
 
 
@@ -71,7 +82,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['category', 'price']
+    filterset_class = ProductFilter
     pagination_class = PageNumberPagination
 
     def get_permissions(self):
