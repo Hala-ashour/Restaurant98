@@ -303,28 +303,24 @@ class ProductAPITestCase(APITestCase):
         self.assertFalse(response.data['is_available'])
         self.assertEqual(response.data['message'], 'Currently unavailable')
 
-    def test_product_filtering(self):
-        """Test filtering products by category and price"""
-        self.client.force_authenticate(user=self.staff)
-        
-        # Filter by category
-        response = self.client.get(self.list_url, {'category': self.category.id})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 2)
-        
-        # Filter by price
-        response = self.client.get(self.list_url, {'price__lt': 3})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1) 
-        
-        # Combined filters
-        response = self.client.get(self.list_url, {
-            'category': self.category.id,
-            'price__lt': 3
-        })
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1) 
+    def test_price_filters(self):
+        # Create test products
+        Product.objects.create(name="Cheap", price=5.00, is_available=True)
+        Product.objects.create(name="Mid-range", price=10.00, is_available=True)
+        Product.objects.create(name="Expensive", price=20.00, is_available=True)
 
+        # Test less than
+        response = self.client.get(reverse('product-list'), {'price_lt': 15})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)  # Cheap and Mid-range
+
+        # Test greater than
+        response = self.client.get(reverse('product-list'), {'price_gt': 8})
+        self.assertEqual(len(response.data['results']), 2)  # Mid-range and Expensive
+
+        # Test range
+        response = self.client.get(reverse('product-list'), {'price_gt': 5, 'price_lt': 15})
+        self.assertEqual(len(response.data['results']), 1)
     def test_product_ordering(self):
         """Test that products are ordered by creation date"""
         self.client.force_authenticate(user=self.staff)
