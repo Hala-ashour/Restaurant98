@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'drf_yasg',
 ]
 AUTH_USER_MODEL = 'rest.User'
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
