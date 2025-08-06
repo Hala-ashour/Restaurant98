@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework import viewsets
-from .models import Category ,Order, Product
+from .models import Category ,Order, Product,OrderItem
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,24 +27,63 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {
             'category': {'write_only': True}
+
+            
         }
         
 
 
-class OrderSerializer(serializers.ModelSerializer):
+
+class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Order
-        fields = ['customer','order_date','total_amount','status','notes']
+        model = OrderItem
+        fields = ['product', 'quantity']
+        
 
 
 from rest_framework import serializers
 from .models import Customer,Order
-# from orders.models import   # حتى تظهري الطلبات المرتبطة بالعميل
 
 class OrderSerializer(serializers.ModelSerializer):
+    order_items = OrderItemSerializer(many=True)
     class Meta:
         model = Order
         fields = '__all__'
+
+
+    
+   
+
+
+
+    def create(self, validated_data):
+            order_items_data = validated_data.pop('order_items')
+            order = Order.objects.create(**validated_data)
+            for item_data in order_items_data:
+                OrderItem.objects.create(order=order, **item_data)
+            order.update_total()
+            return order
+
+    def update(self, instance, validated_data):
+        order_items_data = validated_data.pop('order_items', None)
+
+       
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if order_items_data is not None:
+            
+            instance.order_items.all().delete()
+           
+            for item_data in order_items_data:
+                OrderItem.objects.create(order=instance, **item_data)
+
+        instance.update_total()
+        return instance
+
+    
+    
 
 class CustomerSerializer(serializers.ModelSerializer):
     orders = OrderSerializer(many=True, read_only=True, source='order_set')

@@ -57,33 +57,41 @@ class Order(models.Model):
     total_amount = models.DecimalField(max_digits=7, decimal_places=2, default=0)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES)
     notess = models.TextField(blank=True, null=True)
-    
+
+
+
     def __str__(self):
         return f"Order #{self.id} - {self.customer}"
-    
+
     def update_total(self):
         """Recalculate total_amount from OrderItems"""
-        self.total_amount = sum(
+        total = sum(
             item.get_total_price() for item in self.order_items.all()
         )
-        self.save()
-    
+        self.total_amount = total
+        self.save(update_fields=["total_amount"])
+
     def save(self, *args, **kwargs):
-        if self.status == 'completed':
-            self._mark_products_unavailable()
-        elif self.status in ['pending', 'canceled']:
-            self._mark_products_available()
-        super().save(*args, **kwargs)
-    
+        is_new = self.pk is None
+        super().save(*args, **kwargs)  
+
+        
+        if not is_new:
+            if self.status == 'completed':
+                self._mark_products_unavailable()
+            elif self.status in ['pending', 'canceled']:
+                self._mark_products_available()
+
     def _mark_products_unavailable(self):
         for item in self.order_items.all():
             item.product.is_available = False
             item.product.save()
-    
+
     def _mark_products_available(self):
         for item in self.order_items.all():
             item.product.is_available = True
             item.product.save()
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_items')
@@ -110,3 +118,8 @@ class Customer(models.Model):
 
     def __str__(self):
         return self.user.username
+
+
+
+
+
